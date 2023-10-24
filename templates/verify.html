@@ -1,30 +1,22 @@
-
 <html>
-  <head>
-    <style>
-        img {
-            visibility:hidden
-        }
-        button.html5-qrcode-element {
-            font-size:5vw;
-        }
-        span.html5-qrcode-element {
-            visibility:hidden
-        }
-    </style>
-    <title>
-        Verify PuNiCa Pass
-    </title>
-  <body>
-    <div>
-        <div>Letztes Resultat: </div>
-        <div id="qr-reader-results-status">Validierung unbekannt für:</div>
-        <div id="qr-reader-results-detail">Unbekannt</div>
-        <div id="qr-reader-results-data">Unbekannt</div>
-    </div>
-    <div id="qr-reader" style="width:100%;height:100%;"></div>
-  </body>
+
+<head>
+  <link rel="stylesheet" href="{{url_for('static', filename='verify.css')}}" />
+  <title>
+    Verify PuNiCa Pass
+  </title>
   <script type=text/javascript src="{{url_for('static', filename='html5-qrcode.min.js')}}"></script>
   <script type=text/javascript src="{{url_for('static', filename='verify.js')}}"></script>
-  </head>
+</head>
+
+<body>
+  <div style="width:100%;height:100%;">
+    <div>Letztes Resultat: </div>
+    <div id="qr-reader-results-status">Validierung unbekannt für:</div>
+    <div id="qr-reader-results-detail">Unbekannt</div>
+    <div id="qr-reader-results-data">Unbekannt</div>
+    <div id="qr-reader"></div>
+  </div>
+</body>
+
 </html>
