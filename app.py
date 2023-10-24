@@ -269,6 +269,7 @@ def start_app(admin_token):
         )
 
     # FIXME get proper CA certificate?
+    # FIXME error handling if certificate missing
     app.run(ssl_context=("cert.pem", "key.pem"), debug=True, host="0.0.0.0")
     db.close()
 
