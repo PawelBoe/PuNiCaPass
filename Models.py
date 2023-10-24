@@ -1,11 +1,14 @@
 import datetime
-from peewee import Model, SqliteDatabase, IntegerField, DateTimeField, CharField, ForeignKeyField
 
-db = SqliteDatabase('./database.sqlite')
+from peewee import CharField, DateTimeField, IntegerField, Model, SqliteDatabase
+
+db = SqliteDatabase("./database.sqlite")
+
 
 class BaseModel(Model):
     class Meta:
         database = db
+
 
 class NumericalValues(BaseModel):
     class Meta:
@@ -16,6 +19,7 @@ class NumericalValues(BaseModel):
 
     processed = DateTimeField(default=datetime.datetime.now)
 
+
 class OrganizationKeys(BaseModel):
     class Meta:
         table_name = "organization_keys"
@@ -25,6 +29,7 @@ class OrganizationKeys(BaseModel):
     private_key_b64 = CharField()
 
     processed = DateTimeField(default=datetime.datetime.now)
+
 
 class RevokedPasses(BaseModel):
     class Meta:

@@ -1,13 +1,16 @@
-import argparse, json
+import argparse
 from datetime import datetime
+import json
 
-from flask import Flask, jsonify, request, render_template, send_file
-from Models import db, NumericalValues, OrganizationKeys, RevokedPasses
-from Crypto import generate_new_keypair, sign, smallSign, smallVerify, verify, json_to_qrcode
+from Crypto import generate_new_keypair, json_to_qrcode, smallSign, smallVerify
+from Models import NumericalValues, OrganizationKeys, RevokedPasses, db
+from flask import Flask, jsonify, render_template, request, send_file
 
 
 def initialize_db():
-    print("(re)initializing database, all previously created data is now lost and all PuNiCa Passes invalid!")
+    print(
+        """(re)initializing database, all previously created data is now lost and all PuNiCa Passes invalid!"""
+    )
     db.connect()
 
     db_models = [
@@ -34,6 +37,7 @@ def initialize_db():
 
     db.close()
 
+
 def start_app(admin_token):
     print("starting webapp and api backend")
     db.connect()
@@ -57,7 +61,7 @@ def start_app(admin_token):
         }
         return jsonify(result)
 
-    @app.route("/page/pass/organizations", methods= ["GET"])
+    @app.route("/page/pass/organizations", methods=["GET"])
     def page_pass_organizations():
         # provide whole list of organization names and public keys
         query = OrganizationKeys.select()
@@ -66,39 +70,35 @@ def start_app(admin_token):
         }
         return jsonify(data)
 
-    @app.route("/page/pass/revoked", methods= ["GET"])
+    @app.route("/page/pass/revoked", methods=["GET"])
     def page_pass_revoked():
         # provide whole list of revoked pass ids
         query = RevokedPasses.select()
-        data = {
-            "revoked_passes": [revokedPass.pass_id for revokedPass in query]
-        }
+        data = {"revoked_passes": [revokedPass.pass_id for revokedPass in query]}
         return jsonify(data)
 
-    @app.route("/page/pass/counter", methods= ["GET"])
+    @app.route("/page/pass/counter", methods=["GET"])
     def page_pass_counter():
         # provide number of issued passes
         passIdCounter = NumericalValues.get(label="PassIdCounter")
-        data = {
-            "PassIdCounter": passIdCounter.value
-        }
+        data = {"PassIdCounter": passIdCounter.value}
         return jsonify(data)
 
-    @app.route("/page/pass/sign", methods= ["GET"])
+    @app.route("/page/pass/sign", methods=["GET"])
     def page_pass_sign():
         # provide user data, admin token and key data form
         # submit user data to api with admin token and key data
         # get and display pass pdf/png response
         return render_template("sign.html")
 
-    @app.route("/page/pass/verify", methods= ["GET"])
+    @app.route("/page/pass/verify", methods=["GET"])
     def page_pass_verify():
         # provide qr code scanner for pass data
         # submit pass data to api
         # get pass status message
         return render_template("verify.html")
 
-    @app.route("/page/pass/revoke", methods= ["GET"])
+    @app.route("/page/pass/revoke", methods=["GET"])
     def page_pass_revoke():
         # provide pass_data form
         # submit pass data to api with admin token
@@ -117,7 +117,7 @@ def start_app(admin_token):
         args["memberPub"] = "memberPub" in form
         return args
 
-    @app.route("/api/pass/sign", methods= ["POST"])
+    @app.route("/api/pass/sign", methods=["POST"])
     def api_pass_sign():
         # test admin token
         # sign pass data with key of key data and new pass id
@@ -128,19 +128,19 @@ def start_app(admin_token):
 
         f = request.files["image"]
         f.save("someImage.png")
-        
+
         args = {}
-        try :
+        try:
             args = parseSignArguments(request.form)
-        except:
+        except Exception as e:
             return jsonify(
                 {
                     "status": "not ok",
-                    "detail": "parsing arguments failed",
+                    "detail": "parsing arguments failed {}".format(str(e)),
                 }
             )
 
-        if (args["adminToken"] != admin_token):
+        if args["adminToken"] != admin_token:
             return jsonify(
                 {
                     "status": "not ok",
@@ -162,14 +162,14 @@ def start_app(admin_token):
         unsigned_data = f"{passId};{name};{comment};{entryMonth};{entryYear};{memberNil}{memberCasino}{memberPub};{issue_date}"
 
         # FIXME do not use organizations!
-        private_key = OrganizationKeys.get(organization_name="Nil").private_key_b64
+        # private_key = OrganizationKeys.get(organization_name="Nil").private_key_b64
         try:
             # signed_data = sign(private_key, "asdf", unsigned_data)
             signed_data = smallSign(unsigned_data, "asdf")
         except Exception as e:
             return jsonify(
                 {
-                    "status": "not ok", 
+                    "status": "not ok",
                     "detail": f"signing failed: {str(e)}",
                 }
             )
@@ -182,7 +182,7 @@ def start_app(admin_token):
         qr_code.save("tmp.png")
         return send_file("tmp.png", mimetype="image/png")
 
-    @app.route("/api/pass/verify", methods= ["POST"])
+    @app.route("/api/pass/verify", methods=["POST"])
     def api_pass_verify():
         # test revoked list for pass data
         # verify signed pass data
@@ -191,38 +191,49 @@ def start_app(admin_token):
         data_json = json.loads(request.data)
 
         pass_id = int(data_json["data"].split(";")[0])
-        membership = data_json["data"].split(";")[2]
+        # membership = data_json["data"].split(";")[2]
         # public_key = OrganizationKeys.get(organization_name=membership).public_key_b64
 
-        revoked = len(RevokedPasses.select().where(RevokedPasses.pass_id==pass_id)) > 0
-        if (revoked):
-            return jsonify(
-                {
-                    "status": "not ok",
-                    "detail": "pass is revoked",
-                    "data": data_json["data"],
-                }
-            ), 200
+        revoked = (
+            len(RevokedPasses.select().where(RevokedPasses.pass_id == pass_id)) > 0
+        )
+        if revoked:
+            return (
+                jsonify(
+                    {
+                        "status": "not ok",
+                        "detail": "pass is revoked",
+                        "data": data_json["data"],
+                    }
+                ),
+                200,
+            )
 
         # if verify(data_json, public_key):
         if smallVerify(data_json, "asdf"):
-            return jsonify(
+            return (
+                jsonify(
+                    {
+                        "status": "ok",
+                        "detail": "verification succesfull",
+                        "data": data_json["data"],
+                    }
+                ),
+                200,
+            )
+
+        return (
+            jsonify(
                 {
-                    "status": "ok",
-                    "detail": "verification succesfull",
+                    "status": "not ok",
+                    "detail": "verification failed",
                     "data": data_json["data"],
                 }
-            ), 200
+            ),
+            200,
+        )
 
-        return jsonify(
-            {
-                "status": "not ok",
-                "detail": "verification failed",
-                "data": data_json["data"],
-            }
-        ) , 200
-
-    @app.route("/api/pass/revoke", methods= ["POST"])
+    @app.route("/api/pass/revoke", methods=["POST"])
     def api_pass_revoke():
         # test admin token
         # add pass id to revoked list
@@ -232,10 +243,10 @@ def start_app(admin_token):
 
         token = request.form["admin_token"]
 
-        if (token != admin_token):
+        if token != admin_token:
             return jsonify(
                 {
-                    "status": "not ok", 
+                    "status": "not ok",
                     "detail": "unauthorized",
                 }
             )
@@ -244,7 +255,7 @@ def start_app(admin_token):
         except ValueError:
             return jsonify(
                 {
-                    "status": "not ok", 
+                    "status": "not ok",
                     "detail": "provided pass_id is not a number",
                 }
             )
@@ -252,7 +263,7 @@ def start_app(admin_token):
         RevokedPasses.create(pass_id=pass_id)
         return jsonify(
             {
-                "status": "ok", 
+                "status": "ok",
                 "detail": f"pass id '{request.form['pass_id']}' was added to revoked list",
             }
         )
@@ -261,16 +272,20 @@ def start_app(admin_token):
     app.run(ssl_context=("cert.pem", "key.pem"), debug=True, host="0.0.0.0")
     db.close()
 
+
 def main():
-    parser = argparse.ArgumentParser('Create and manage member certificates for PuNiCa Pass')
-    parser.add_argument('--initialize', action='store_true')
-    parser.add_argument('--admin_token', required=True)
+    parser = argparse.ArgumentParser(
+        "Create and manage member certificates for PuNiCa Pass"
+    )
+    parser.add_argument("--initialize", action="store_true")
+    parser.add_argument("--admin_token", required=True)
     args = parser.parse_args()
 
     if args.initialize:
         initialize_db()
     else:
         start_app(args.admin_token)
+
 
 if __name__ == "__main__":
     main()
