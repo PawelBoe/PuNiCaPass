@@ -25,66 +25,6 @@
     <div id="qr-reader" style="width:100%;height:100%;"></div>
   </body>
   <script type=text/javascript src="{{url_for('static', filename='html5-qrcode.min.js')}}"></script>
-  <script>
-    function docReady(fn) {
-        // see if DOM is already available
-        if (document.readyState === "complete" || document.readyState === "interactive") {
-            // call on next available tick
-            setTimeout(fn, 1);
-        } else {
-            document.addEventListener("DOMContentLoaded", fn);
-        }
-    } 
-
-    docReady(function() {
-        var resultStatusContainer = document.getElementById('qr-reader-results-status');
-        var resultDetailContainer = document.getElementById('qr-reader-results-detail');
-        var resultDataContainer = document.getElementById('qr-reader-results-data');
-        var cameraContainer = document.getElementById('qr-reader');
-        
-        var html5QrcodeScanner = new Html5QrcodeScanner(
-            "qr-reader", { fps: 2, qrbox: 500 });
-        
-        var lastResult, countResults = 0;
-        function onScanSuccess(decodedText, decodedResult) {
-            if (decodedText !== lastResult) {
-                ++countResults;
-                lastResult = decodedText;
-                decodedText = decodedText.replace(/'/g, '"')
-                console.log("Scan result = ", JSON.parse(decodedText));
-
-                fetch("/api/pass/verify", {
-                    method: "POST",
-                    headers: {'Content-Type': 'application/json'}, 
-                    body: (decodedText)
-                    }).then(res => {
-                        return res.json()
-                    }).then((response) => {
-                        console.log("Fetch response = ", response);
-                        const verified = response.status === "ok"
-                        const detail = response.detail
-                        const data = response.data
-
-                        if (verified) {
-                            resultStatusContainer.innerHTML = "Validierung erfolgreich";
-                        } else {
-                            resultStatusContainer.innerHTML = "Validierung fehlgeschlagen";
-                        }
-                        resultDetailContainer.innerHTML = detail;
-                        resultDataContainer.innerHTML = data;
-                        });
-            }
-        }
-        
-        // Optional callback for error, can be ignored.
-        function onScanError(qrCodeError) {
-            // This callback would be called in case of qr code scan error or setup error.
-            // You can avoid this callback completely, as it can be very verbose in nature.
-        }
-        
-        html5QrcodeScanner.render(onScanSuccess, onScanError);
-    });
-
-  </script>
+  <script type=text/javascript src="{{url_for('static', filename='verify.js')}}"></script>
   </head>
 </html>
