@@ -1,0 +1,9 @@
+img {
+  visibility: hidden;
+}
+button.html5-qrcode-element {
+  font-size: 5vw;
+}
+span.html5-qrcode-element {
+  visibility: hidden;
+}
