@@ -45,21 +45,7 @@ def start_app(admin_token):
 
     @app.route("/")
     def landing_page():
-        # provide list of valid routes
-        result = {
-            "valid_routes": [
-                ("/page/pass/organizations", "GET"),
-                ("/page/pass/revoked", "GET"),
-                ("/page/pass/counter", "GET"),
-                ("/page/pass/create", "GET"),
-                ("/page/pass/verify", "GET"),
-                ("/page/pass/revoke", "GET"),
-                ("/api/pass/sign", "POST"),
-                ("/api/pass/verify", "POST"),
-                ("/api/pass/revoke", "POST"),
-            ]
-        }
-        return jsonify(result)
+        return render_template("index.html")
 
     @app.route("/page/pass/organizations", methods=["GET"])
     def page_pass_organizations():
