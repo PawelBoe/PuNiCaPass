@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="{{url_for('static', filename='css/pico.min.css')}}">
+  <link rel="icon" href="{{ url_for('static', filename='images/punicaze.ico') }}">
+  <link rel="stylesheet" href="{{url_for('static', filename='css/index.css')}}" />
+
+  <title>PuNiCa Pass</title>
+</head>
+
+<body>
+  <main class="container">
+    <nav>
+      <ul>
+        <li><strong>PuNiCa-Pass</strong></li>
+      </ul>
+      <ul>
+        <li><a href="page/pass/sign">Erstellen</a></li>
+        <li><a href="page/pass/verify">Prüfen</a></li>
+        <li><a href="page/pass/revoke">Widerrufen</a></li>
+      </ul>
+    </nav>
+    <div class="grid">
+      <div style="text-align: center;">
+        <img src="{{url_for('static', filename='images/punicaze.svg')}}" alt="punicaze" width="50%" height="50%">
+      </div>
+    </div>
+
+  </main>
+</body>
+
+</html
