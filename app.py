@@ -95,8 +95,7 @@ def start_app(admin_token):
         args = {}
         args["name"] = form["name"]
         args["comment"] = form.get("comment", "")
-        args["entryMonth"] = form["entryMonth"]
-        args["entryYear"] = form["entryYear"]
+        args["entryDate"] = form["entryDate"]  # TODO parse date properly
         args["adminToken"] = form["adminToken"]
         args["memberNil"] = "memberNil" in form
         args["memberCasino"] = "memberCasino" in form
@@ -140,12 +139,11 @@ def start_app(admin_token):
         issue_date = datetime.now().strftime("%m/%d/%Y")
         name = args["name"]
         comment = args["comment"]
-        entryMonth = args["entryMonth"]
-        entryYear = args["entryYear"]
+        entryDate = args["entryDate"]
         memberNil = "N" if args["memberNil"] else ""
         memberCasino = "C" if args["memberCasino"] else ""
         memberPub = "P" if args["memberPub"] else ""
-        unsigned_data = f"{passId};{name};{comment};{entryMonth};{entryYear};{memberNil}{memberCasino}{memberPub};{issue_date}"
+        unsigned_data = f"{passId};{name};{comment};{entryDate};{memberNil}{memberCasino}{memberPub};{issue_date}"
 
         # FIXME do not use organizations!
         # private_key = OrganizationKeys.get(organization_name="Nil").private_key_b64
